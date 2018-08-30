@@ -26,6 +26,7 @@ function StardogD3(_selector, _options) {
             relationshipOverlay: false,
             relationshipOverlayColor: '#2660d3',
             zoomFit: false,
+            showReasoning: false,
         },
         VERSION = '0.0.1';
 
@@ -98,51 +99,40 @@ function StardogD3(_selector, _options) {
     }
 
     function initSimulation(stardogData) {
-        console.log('initSimulation', stardogData);
 
         let simulation;
-        // if (stardogData.relationships && stardogData.relationships.length > 0) {
-        //     console.log('IN IF');
-        //
-        //     simulation = d3.forceSimulation(nodes)
-        //         .velocityDecay(0.2)
-        //         .force('collide', d3.forceCollide().radius(() => {
-        //             return options.minCollision;
-        //         }))
-        //         .force('charge', d3.forceManyBody().strength(200))
-        //         .force('center', d3.forceCenter(d3.select(_selector).node().offsetWidth / 2, d3.select(_selector).node().offsetHeight / 2))
-        //         .force('link', d3.forceLink(relationships).distance(120).id(function (d) {
-        //             return d.id;
-        //         }))
-        //         .on('tick', function () {
-        //             tick();
-        //         });
-        // } else {
-        //     console.log('IN ELSE');
-        //
-        //     simulation = d3.forceSimulation(nodes)
-        //         .force("charge", d3.forceManyBody())
-        //         .force('center', d3.forceCenter(d3.select(_selector).node().offsetWidth / 2, d3.select(_selector).node().offsetHeight / 2))
-        //         .force("link", d3.forceLink(relationships).id(function (d) {
-        //             return d.id;
-        //         }))
-        //         .on('tick', function () {
-        //             tick();
-        //         });
-        // }
+
+        // simulation = d3.forceSimulation(nodes)
+        //     .velocityDecay(0.2)
+        //     .force('collide', d3.forceCollide().radius(() => {
+        //         return options.minCollision;
+        //     }))
+        //     .force('charge', d3.forceManyBody().strength(200))
+        //     .force('center', d3.forceCenter(d3.select(_selector).node().offsetWidth / 2, d3.select(_selector).node().offsetHeight / 2))
+        //     .force('link', d3.forceLink(relationships).distance(130).id(function (d) {
+        //         return d.id;
+        //     }))
+        //     .on('tick', function () {
+        //         tick();
+        //     });
 
         simulation = d3.forceSimulation(nodes)
-            .velocityDecay(0.2)
-            .force('collide', d3.forceCollide().radius(() => {
+            .force('collide', d3.forceCollide().radius(function(d) {
                 return options.minCollision;
             }))
-            .force('charge', d3.forceManyBody().strength(200))
-            .force('center', d3.forceCenter(d3.select(_selector).node().offsetWidth / 2, d3.select(_selector).node().offsetHeight / 2))
-            .force('link', d3.forceLink(relationships).distance(120).id(function (d) {
+            // .force('charge', d3.forceManyBody().strength(200))
+            .force('link', d3.forceLink(relationships).distance(130).id(function(d) {
                 return d.id;
             }))
-            .on('tick', function () {
+            .force('center', d3.forceCenter(d3.select(_selector).node().offsetWidth / 2, d3.select(_selector).node().offsetHeight / 2))
+            .on('tick', function() {
                 tick();
+            })
+            .on('end', function() {
+                if (options.zoomFit && !justLoaded) {
+                    justLoaded = true;
+                    zoomFit(2);
+                }
             });
 
         return simulation;
@@ -255,6 +245,8 @@ function StardogD3(_selector, _options) {
 
     function tickRelationshipsOverlays() {
 
+        // console.log('relationshipOverlay: ', relationshipOverlay);
+
         relationshipOverlay.attr('d', function (d) {
 
             // Determines if curved edges should always be used
@@ -364,13 +356,11 @@ function StardogD3(_selector, _options) {
                     let translateY = 8;
                     if (rotateAngle > 350) {
                         translateY += (10 - (360 - rotateAngle)) / 2;
-
                     } else if (rotateAngle < 10) {
-                        console.log(rotateAngle);
                         translateY += (10 - rotateAngle) / 2;
                     }
 
-                    return 'translate(' + (rotatedPoint.x * .72) + ', ' + translateY + ') rotate(' + (360 - angle) + ')';
+                    return 'translate(' + (rotatedPoint.x * .80) + ', ' + translateY + ') rotate(' + (360 - angle) + ')';
                 });
             }
         });
@@ -446,11 +436,11 @@ function StardogD3(_selector, _options) {
                 .attr('fill', options.relationshipColor);
         }
 
-        svgNodes = svg.append('g')
-            .attr('class', 'nodes');
-
         svgRelationships = svg.append('g')
             .attr('class', 'relationships');
+
+        svgNodes = svg.append('g')
+            .attr('class', 'nodes');
 
     }
 
@@ -712,12 +702,9 @@ function StardogD3(_selector, _options) {
     }
 
     function appendRelationshipToGraph() {
-
-        console.log('appendRelationshipToGraph');
-
-        let relationship = appendRelationship(),
-            outline = appendOutlineToRelationship(relationship),
+        var relationship = appendRelationship(),
             text = appendTextToRelationship(relationship),
+            outline = appendOutlineToRelationship(relationship),
             overlay = appendOverlayToRelationship(relationship);
 
         return {
@@ -1043,80 +1030,37 @@ function StardogD3(_selector, _options) {
 
         simulation.nodes(nodes);
         simulation.force('link').links(relationships);
-        simulation.alpha(1).restart();
+        simulation.alpha(0.3).restart();
     }
 
     function updateRelationships(action, r) {
 
         console.log('updateRelationships');
-        // console.log('relationships', relationships);
-        // console.log('svgRelationships', svgRelationships);
 
-        if (action === 'add') {
-            // Array.prototype.push.apply(relationships, r);
+        relationships = r;
+        relationship = svgRelationships.selectAll('.relationship')
+            .data(r, (d) => {
+                return d.id;
+            });
 
-            // relationship = svgRelationships.selectAll('.relationship')
-            //     .data(r, (d) => {
-            //         console.log(d.id);
-            //         return d.id;
-            //     });
+        let relationshipEnter = appendRelationshipToGraph();
 
+        relationship = relationshipEnter.relationship.merge(relationship);
 
-            // console.log('updateRelationships - relationship - 1', svgRelationships.selectAll('.relationship'));
-            // console.log('updateRelationships - relationship - 2', r);
+        relationshipText = svg.selectAll('.relationship .text');
+        relationshipText = relationshipEnter.text.merge(relationshipText);
 
-            relationships = r;
-            relationship = svgRelationships.selectAll('.relationship')
-                .data(r, (d) => {
-                    return d.id;
-                });
+        relationshipOutline = svg.selectAll('.relationship .outline');
+        relationshipOutline = relationshipEnter.outline.merge(relationshipOutline);
 
-            // console.log('updateRelationships - relationship - 3', r);
+        relationshipOverlay = svg.selectAll('.relationship .overlay');
+        relationshipOverlay = relationshipEnter.overlay.merge(relationshipOverlay);
 
 
-            let relationshipEnter = appendRelationshipToGraph();
-
-            relationship = relationshipEnter.relationship.merge(relationship);
-
-            relationshipText = svg.selectAll('.relationship .text');
-            relationshipText = relationshipEnter.text.merge(relationshipText);
-
-            relationshipOutline = svg.selectAll('.relationship .outline');
-            relationshipOutline = relationshipEnter.outline.merge(relationshipOutline);
-
-            relationshipOverlay = svg.selectAll('.relationship .overlay');
-            relationshipOverlay = relationshipEnter.overlay.merge(relationshipOverlay);
-
-
-
-
-        } else {
-            // let removeArray = [];
-            // relationships = relationships.reduce(function (a, b) {
-            //     if (b.source !== r[0].id && b.target !== r[0].id)
-            //         a.push(b);
-            //
-            //     return a;
-            // }, []);
-
-            svgRelationships.selectAll('.relationship')
-                .data(relationships, function (d) {
-                    return d.id;
-                }).exit().remove();
-        }
-
-
-        // console.log("updateRelationships - relationships", svgRelationships.selectAll('.relationship'));
-
-        // relationship = svgRelationships.selectAll('.relationship')
-        //     .data(r, (d) => {
-        //         console.log(d.id);
-        //         return d.id;
-        //     });
-
-
-        // console.log('relationships', relationships);
-        // console.log('relationship', relationship);
+        svgRelationships.selectAll('.relationship')
+            .data(relationships, function (d) {
+                return d.id;
+            }).exit().remove();
     }
 
     function version() {
