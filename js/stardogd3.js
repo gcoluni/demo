@@ -254,7 +254,7 @@ function StardogD3(_selector, _options) {
 
             // If only showRelationshipCurvedEdges is set, we will check to see if there are multiple
             // edges in order to draw a curved or straight edge.
-            if (options.showRelationshipCurvedEdges) {
+            if (!opposingRelationship && options.showRelationshipCurvedEdges) {
                 opposingRelationship = relationships.find(r =>
                     r.source.id === d.target.id &&
                     r.target.id === d.source.id);
@@ -304,8 +304,12 @@ function StardogD3(_selector, _options) {
             let rel = d3.select(this),
                 text = rel.select('.text');
 
-            let opposingRelationship;
-            if (options.showRelationshipCurvedEdges) {
+            // Determines if curved edges should always be used
+            let opposingRelationship = options.showRelationshipCurvedEdges && options.alwaysShowCurvedEdges;
+
+            // If only showRelationshipCurvedEdges is set, we will check to see if there are multiple
+            // edges in order to draw a curved or straight edge.
+            if (!opposingRelationship && options.showRelationshipCurvedEdges) {
                 opposingRelationship = relationships.find(r =>
                     r.source.id === relationship.target.id &&
                     r.target.id === relationship.source.id
@@ -330,11 +334,10 @@ function StardogD3(_selector, _options) {
                         translateY += (10 - (360 - rotateAngle)) / 2;
 
                     } else if (rotateAngle < 10) {
-                        console.log(rotateAngle);
                         translateY += (10 - rotateAngle) / 2;
                     }
 
-                    return 'translate(' + ((normalise + (options.nodeRadius)) / 2) + ', ' + translateY + ') rotate(' + rotateAngle + ')';
+                    return 'translate(' + ((normalise + (options.nodeRadius)) / 3) + ', ' + translateY + ') rotate(' + rotateAngle + ')';
                 });
             } else {
 
@@ -633,8 +636,12 @@ function StardogD3(_selector, _options) {
             .on('mouseenter', function (d) {
                 // if (info) {
 
-                let opposingRelationship;
-                if (options.showRelationshipCurvedEdges) {
+                // Determines if curved edges should always be used
+                let opposingRelationship = options.showRelationshipCurvedEdges && options.alwaysShowCurvedEdges;
+
+                // If only showRelationshipCurvedEdges is set, we will check to see if there are multiple
+                // edges in order to draw a curved or straight edge.
+                if (!opposingRelationship && options.showRelationshipCurvedEdges) {
                     opposingRelationship = relationships.find(r =>
                         r.source.id === d.target.id &&
                         r.target.id === d.source.id);
@@ -650,11 +657,13 @@ function StardogD3(_selector, _options) {
             })
             .on('mouseleave', function (d) {
                 // if (info) {
-                d3.select(this).select('.overlayOn').attr('class', 'overlay');
 
+                // Determines if curved edges should always be used
+                let opposingRelationship = options.showRelationshipCurvedEdges && options.alwaysShowCurvedEdges;
 
-                let opposingRelationship;
-                if (options.showRelationshipCurvedEdges) {
+                // If only showRelationshipCurvedEdges is set, we will check to see if there are multiple
+                // edges in order to draw a curved or straight edge.
+                if (!opposingRelationship && options.showRelationshipCurvedEdges) {
                     opposingRelationship = relationships.find(r =>
                         r.source.id === d.target.id &&
                         r.target.id === d.source.id);
@@ -892,9 +901,9 @@ function StardogD3(_selector, _options) {
         };
     }
 
-    function updateWithD3Data(action, d3Data) {
+    function updateWithD3Data(d3Data) {
         console.log('updateWithD3Data');
-        updateNodesAndRelationships(action, d3Data.nodes, d3Data.relationships);
+        updateNodesAndRelationships(d3Data.nodes, d3Data.relationships);
     }
 
     function addRemoveStardogData(action, stardogData) {
@@ -912,14 +921,7 @@ function StardogD3(_selector, _options) {
         console.log('updateWithStardogData');
         // let d3Data = stardogDataToD3Data(stardogData);
 
-
-        if ((stardogData && stardogData.relationships.length > 0 && relationships && relationships.length === 0)
-            || (stardogData && stardogData.relationships.length === 0 && relationships && relationships.length > 0)) {
-
-            initSimulation(stardogData);
-        }
-
-        updateWithD3Data("add", stardogData);
+        updateWithD3Data(stardogData);
     }
 
     function updateInfo(d) {
@@ -938,80 +940,32 @@ function StardogD3(_selector, _options) {
         });
     }
 
-    function updateNodes(action, n) {
+    function updateNodes(n) {
 
 
         console.log('updateNodes');
-        // console.log('n', n);
-        // console.log('nodes', nodes);
-
-        // Array.prototype.push.apply(nodes, n);
-
-        // Makes them unique
-        // nodes = nodes.reduce(function (a, b) {
-        //     let found = a.find(function (element) {
-        //         return element.id === b.id;
-        //     });
-        //
-        //     if (!found) a.push(b);
-        //
-        //     return a;
-        // }, []);
 
         nodes = n;
 
-        if (action === 'add') {
-            node = svgNodes.selectAll('.node')
-                .data(nodes, (d) => {
-                    // console.log(d.id)
-                    return d.id;
-                });
+        svgNodes.selectAll('.node').remove();
 
-            let nodeEnter = appendNodeToGraph();
-            node = nodeEnter.merge(node);
+        node = svgNodes.selectAll('.node')
+            .data(nodes, (d) => {
+                // console.log(d.id)
+                return d.id;
+            });
 
-        } else if (action === 'remove') {
-            // // removes the element that was clicked on
-            // let removeNode = nodes.find(function (element) {
-            //     return element.id === n[0].id;
-            // });
-            //
-            // // removes the clicked on array
-            // let index = nodes.indexOf(removeNode);
-            // if (index > -1) {
-            //     nodes.splice(index, 1);
-            // }
-            //
-            // // clones the nodes array so we can loop through it and remove the nodes that now don't have
-            // // relationships after the node that was clicked on and its relationships are deleted
-            // let tempNodes = nodes.slice(0);
-            //
-            // // loops through all of the nodes
-            // tempNodes.forEach(function (b) {
-            //     let found = relationships.find(function (element) {
-            //         return element.source === b.id || element.target === b.id;
-            //     });
-            //
-            //     // If it was not found, it means it does not have a relationship so we must delete it
-            //     if (!found) {
-            //         // Gets the index of the node to delete and removes it
-            //         let index = nodes.indexOf(b);
-            //         if (index > -1) {
-            //             nodes.splice(index, 1);
-            //         }
-            //     }
-            // });
-            //
-            // // Removes the nodes
-            // svgNodes.selectAll('.node')
-            //     .data(nodes, (d) => {
-            //         return d.id;
-            //     }).exit().remove();
+        let nodeEnter = appendNodeToGraph();
+        node = nodeEnter.merge(node);
 
-        }
+        // Removes the nodes
+        // svgNodes.selectAll('.node')
+        //     .data(nodes, (d) => {
+        //         return d.id;
+        //     }).exit().remove();
     }
 
-    function updateNodesAndRelationships(action, n, r) {
+    function updateNodesAndRelationships(n, r) {
 
         console.log('updateNodesAndRelationships');
 
@@ -1023,21 +977,31 @@ function StardogD3(_selector, _options) {
         //     updateNodes(action, n);
         // }
 
-        updateNodes(action, n);
-        updateRelationships(action, r);
+        updateNodes(n);
+        updateRelationships(r);
 
         // console.log('updateNodesAndRelationships', nodes, relationships);
 
         simulation.nodes(nodes);
         simulation.force('link').links(relationships);
-        simulation.alpha(0.3).restart();
+        simulation.alpha(1).restart();
     }
 
-    function updateRelationships(action, r) {
+    function updateRelationships(r) {
 
         console.log('updateRelationships');
 
+
+        // Array.prototype.push.apply(relationships, r);
+        //
+        // console.log('relationships - 1', relationships);
+
         relationships = r;
+
+        // console.log('relationships - 2', relationships);
+
+        svgRelationships.selectAll('.relationship').remove();
+
         relationship = svgRelationships.selectAll('.relationship')
             .data(r, (d) => {
                 return d.id;
@@ -1047,20 +1011,19 @@ function StardogD3(_selector, _options) {
 
         relationship = relationshipEnter.relationship.merge(relationship);
 
-        relationshipText = svg.selectAll('.relationship .text');
-        relationshipText = relationshipEnter.text.merge(relationshipText);
-
         relationshipOutline = svg.selectAll('.relationship .outline');
         relationshipOutline = relationshipEnter.outline.merge(relationshipOutline);
 
         relationshipOverlay = svg.selectAll('.relationship .overlay');
         relationshipOverlay = relationshipEnter.overlay.merge(relationshipOverlay);
 
+        relationshipText = svg.selectAll('.relationship .text');
+        relationshipText = relationshipEnter.text.merge(relationshipText);
 
-        svgRelationships.selectAll('.relationship')
-            .data(relationships, function (d) {
-                return d.id;
-            }).exit().remove();
+        // svgRelationships.selectAll('.relationship')
+        //     .data(relationships, function (d) {
+        //         return d.id;
+        //     }).exit().remove();
     }
 
     function version() {

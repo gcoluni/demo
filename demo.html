@@ -29,8 +29,6 @@
             },
             {
                 createHeaders: ({headers}) => {
-                    // headers.set('Connection', 'keep-alive');
-                    // headers.set('Transfer-Encoding', 'chunked');
                     headers.set('Content-Type', 'application/json');
                     return headers;
                 }
@@ -94,6 +92,16 @@
                     '\t\t\t\t?f :motherOf ?o .\n' +
                     '\t\t\t\tfilter ( ?r != ?o )\n' +
                     '\t\t\t}\n' +
+                    '\t\t\tUNION\n' +
+                    '\t\t\t{\n' +
+                    '\t\t\t\t?o :sisterOf ?r .\n' +
+                    '\t\t\t\tfilter ( ?r != ?o )\n' +
+                    '\t\t\t}\t\n' +
+                    '\t\t\tUNION\n' +
+                    '\t\t\t{ \n' +
+                    '\t\t\t\t?o :brotherOf ?r .\n' +
+                    '\t\t\t\tfilter ( ?r != ?o )\n' +
+                    '\t\t\t}\n' +
                     '  \t\t}\n' +
                     '\tTHEN {\n' +
                     '            ?r :sisterOf ?o .\n' +
@@ -115,10 +123,56 @@
                     '\t\t\t\t?f :motherOf ?o .\n' +
                     '\t\t\t\tfilter ( ?r != ?o )\n' +
                     '\t\t\t}\n' +
+                    '\t\t\tUNION\n' +
+                    '\t\t\t{\n' +
+                    '\t\t\t\t?o :sisterOf ?r .\n' +
+                    '\t\t\t\tfilter ( ?r != ?o )\n' +
+                    '\t\t\t}\t\n' +
+                    '\t\t\tUNION\n' +
+                    '\t\t\t{ \n' +
+                    '\t\t\t\t?o :brotherOf ?r .\n' +
+                    '\t\t\t\tfilter ( ?r != ?o )\n' +
+                    '\t\t\t}\n' +
                     '  \t\t}\n' +
                     '\tTHEN {\n' +
                     '            ?r :brotherOf ?o .\n' +
-                    '        } """ .\n' +
+                    '        } """ .\t\t\n' +
+                    '\n' +
+                    ':isSonOf a <tag:stardog:api:rule:SPARQLRule> ;\n' +
+                    '\t<tag:stardog:api:rule:content> """\n' +
+                    '\tIF {\n' +
+                    '  \t\t    ?r a :Person ;\n' +
+                    '\t\t\tstardog:gender \'male\' .  \n' +
+                    '\t\t\t{ \n' +
+                    '\t\t\t\t?f :fatherOf ?r .\n' +
+                    '\t\t\t} \n' +
+                    '\t\t\tUNION\n' +
+                    '\t\t\t{ \n' +
+                    '\t\t\t\t?f :motherOf ?r .\n' +
+                    '\t\t\t}\n' +
+                    '  \t\t}\n' +
+                    '\tTHEN {\n' +
+                    '            ?r :sonOf ?f .\n' +
+                    '        } """ .\t\t\n' +
+                    '\n' +
+                    ':isDaughterOf a <tag:stardog:api:rule:SPARQLRule> ;\n' +
+                    '\t<tag:stardog:api:rule:content> """\n' +
+                    '\tIF {\n' +
+                    '  \t\t    ?r a :Person ;\n' +
+                    '\t\t\tstardog:gender \'female\' .  \n' +
+                    '\t\t\t{ \n' +
+                    '\t\t\t\t?f :fatherOf ?r .\n' +
+                    '\t\t\t} \n' +
+                    '\t\t\tUNION\n' +
+                    '\t\t\t{ \n' +
+                    '\t\t\t\t?f :motherOf ?r .\n' +
+                    '\t\t\t}\n' +
+                    '  \t\t}\n' +
+                    '\tTHEN {\n' +
+                    '            ?r :daughterOf ?f .\n' +
+                    '        } """ .\t\t\t\t\n' +
+                    '\n' +
+                    '\n' +
                     '\n' +
                     ':isCousinOf a <tag:stardog:api:rule:SPARQLRule> ;\n' +
                     '\t<tag:stardog:api:rule:content> """\n' +
@@ -140,103 +194,24 @@
                     '            ?r :cousinOf ?c .\n' +
                     '        } """ .\n' +
                     '\n' +
-                    '<http://stardog.com/PJ_Kennedy> a :Person ;\n' +
-                    '\t:fatherOf <http://stardog.com/Joseph_Kennedy> , <http://stardog.com/Francis_Kennedy> , <http://stardog.com/Mary_Kennedy> , <http://stardog.com/Margaret_Kennedy> ;\n' +
-                    '\t:husbandOf <http://stardog.com/Mary_Hickey> ;\n' +
-                    '\t<tag:stardog:api:firstName> "PJ" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "male" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Joseph_Kennedy> a :Person ;\n' +
-                    '\t:fatherOf <http://stardog.com/John_Kennedy> , <http://stardog.com/Eunice_Kennedy> , <http://stardog.com/Patricia_Kennedy> , <http://stardog.com/Robert_Kennedy> , <http://stardog.com/Jean_Kennedy> , <http://stardog.com/Ted_Kennedy> , <http://stardog.com/Kathleen_Kennedy> , <http://stardog.com/Rosemary_Kennedy> , <http://stardog.com/Joseph_Jr_Kennedy> ;\n' +
-                    '\t:husbandOf <http://stardog.com/Rose_Kennedy> ;\n' +
-                    '\t<tag:stardog:api:firstName> "Joseph" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "male" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Francis_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Francis" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Mary_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Mary" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Margaret_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Margaret" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Mary_Hickey> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Mary" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Hickey" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
                     '<http://stardog.com/John_Kennedy> a :Person ;\n' +
-                    '\t:fatherOf <http://stardog.com/Patrick_Kennedy> , <http://stardog.com/Arabella_Kennedy> , <http://stardog.com/John_Jr_Kennedy> , <http://stardog.com/Caroline_Kennedy> ;\n' +
+                    '\t:fatherOf <http://stardog.com/Patrick_Kennedy> , <http://stardog.com/John_Jr_Kennedy> , <http://stardog.com/Caroline_Kennedy> ;\n' +
                     '\t:husbandOf <http://stardog.com/Jacqueline_Kennedy> ;\n' +
+                    '\t:brotherOf <http://stardog.com/Robert_Kennedy> ;\n' +
                     '\t<tag:stardog:api:firstName> "John" ;\n' +
                     '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
                     '\t<tag:stardog:api:gender> "male" .\n' +
                     '\n' +
-                    '<http://stardog.com/Eunice_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Eunice" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Patricia_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Patricia" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
                     '<http://stardog.com/Robert_Kennedy> a :Person ;\n' +
-                    '\t:fatherOf <http://stardog.com/Robert_Jr_Kennedy> , <http://stardog.com/David_Kennedy> , <http://stardog.com/Courtney_Kennedy> , <http://stardog.com/Max_Kennedy> , <http://stardog.com/Rory_Kennedy> ;\n' +
-                    '\t:husbandOf <http://stardog.com/Ethel_Skakel> ;\n' +
+                    '\t:fatherOf <http://stardog.com/Robert_Jr_Kennedy> , <http://stardog.com/Courtney_Kennedy> ;\n' +
                     '\t<tag:stardog:api:firstName> "Robert" ;\n' +
                     '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
                     '\t<tag:stardog:api:gender> "male" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Jean_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Jean" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Ted_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Ted" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "male" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Kathleen_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Kathleen" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Rosemary_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Rosemary" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Joseph_Jr_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Joseph_Jr" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "male" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Rose_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Rose" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
                     '\n' +
                     '<http://stardog.com/Patrick_Kennedy> a :Person ;\n' +
                     '\t<tag:stardog:api:firstName> "Patrick" ;\n' +
                     '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
                     '\t<tag:stardog:api:gender> "male" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Arabella_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Arabella" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
                     '\n' +
                     '<http://stardog.com/John_Jr_Kennedy> a :Person ;\n' +
                     '\t<tag:stardog:api:firstName> "John_Jr" ;\n' +
@@ -258,18 +233,8 @@
                     '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
                     '\t<tag:stardog:api:gender> "male" .\n' +
                     '\n' +
-                    '<http://stardog.com/Ethel_Skakel> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Ethel" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Skakel" ;\n' +
-                    '\t<tag:stardog:api:gender> "female" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Max_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Max" ;\n' +
-                    '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
-                    '\t<tag:stardog:api:gender> "male" .\n' +
-                    '\n' +
-                    '<http://stardog.com/Rory_Kennedy> a :Person ;\n' +
-                    '\t<tag:stardog:api:firstName> "Rory" ;\n' +
+                    '<http://stardog.com/Courtney_Kennedy> a :Person ;\n' +
+                    '\t<tag:stardog:api:firstName> "Courtney" ;\n' +
                     '\t<tag:stardog:api:lastName> "Kennedy" ;\n' +
                     '\t<tag:stardog:api:gender> "female" .\n';
 
@@ -488,10 +453,6 @@
             componentDidMount() {
                 this.getRelationships();
             }
-            //
-            // componentDidUpdate() {
-            //     this.getRelationships();
-            // }
 
             componentDidUpdate() {
                 if (this.props.updateRelationships) {
@@ -644,11 +605,11 @@
 
                 this.state = {
                     edgesLoading: false,
-                    nodesLoading: false,
-                    reasoningLoading: false
+                    nodesLoading: false
                 };
 
-                this.edges = [], this.nodes = [], this.reasoningEdges = [];
+                this.edges = [];
+                this.nodes = [];
             }
 
             componentDidUpdate() {
@@ -658,17 +619,16 @@
 
                     this.setState({
                         edgesLoading: true,
-                        nodesLoading: true,
-                        reasoningLoading: true
+                        nodesLoading: true
                     });
                 } else {
-                    if (!this.state.edgesLoading && !this.state.nodesLoading && !this.state.reasoningLoading) {
+                    if (!this.state.edgesLoading && !this.state.nodesLoading) {
 
                         if (!stardogd3) {
 
                             vizData = {
                                 nodes: this.nodes,
-                                relationships: this.props.useReasoning ? this.reasoningEdges : this.edges
+                                relationships: this.edges
                             };
 
                             stardogd3 = new StardogD3('#stardogd3', {
@@ -680,18 +640,16 @@
                                 relationshipOpacity: .1,
                                 showRelationshipTitles: true,
                                 relationshipIcon: 'arrow',
-                                // showRelationshipCurvedEdges: true,
-                                // alwaysShowCurvedEdges: true,
+                                showRelationshipCurvedEdges: true,
+                                alwaysShowCurvedEdges: true,
                             });
                         } else {
-                            console.log('USING REASONING: ', this.props.useReasoning);
-                            console.log('USING REASONING EDGES: ', this.reasoningEdges);
-                            console.log('USING NODES: ', this.nodes);
+
+                            console.log('demo - edges', this.edges);
 
                             stardogd3.updateWithStardogData({
                                 nodes: this.nodes,
-                                relationships: this.props.useReasoning ? this.reasoningEdges : this.edges
-                                // relationships: this.reasoningEdges
+                                relationships: this.edges
                             })
                         }
                     }
@@ -704,8 +662,7 @@
 
                 this.setState({
                     edgesLoading: true,
-                    nodesLoading: true,
-                    reasoningLoading: true
+                    nodesLoading: true
                 });
 
                 this.performQuery();
@@ -753,9 +710,8 @@
                     '    FILTER (?linkType != :linkType) \n' +
                     '}';
 
-                stardogjs.query.execute(standConn, 'stardogDemo', queryStr, 'application/sparql-results+json', {reasoning: false})
+                stardogjs.query.execute(standConn, 'stardogDemo', queryStr, 'application/sparql-results+json', {reasoning: this.props.useReasoning})
                     .then(({body}) => {
-                        this.setState({edgesLoading: false});
                         if (body && body.results && body.results.bindings && body.results.bindings.length > 0) {
 
                             this.edges = [];
@@ -772,33 +728,12 @@
                                 });
                             }
                         }
+
+                        this.setState({edgesLoading: false});
+
                     }).catch((err) => {
-                    this.setState({edgesLoading: false});
-                    return Promise.reject(err);
-                });
-
-                stardogjs.query.execute(standConn, 'stardogDemo', queryStr, 'application/sparql-results+json', {reasoning: true})
-                    .then(({body}) => {
-                        this.setState({reasoningLoading: false});
-                        if (body && body.results && body.results.bindings && body.results.bindings.length > 0) {
-
-                            this.reasoningEdges = [];
-
-                            if (!_.isEmpty(body.results.bindings)) {
-                                body.results.bindings.forEach(e => {
-                                    this.reasoningEdges.push({
-                                        source: e.source.value,
-                                        target: e.target.value,
-                                        linkType: e.linkType.value.substring(e.linkType.value.lastIndexOf('/') + 1, e.linkType.value.length),
-                                        id: `${e.source.value}_${e.linkType.value}_${e.target.value}`
-
-                                    });
-                                });
-                            }
-                        }
-                    }).catch((err) => {
-                    this.setState({reasoningLoading: false});
-                    return Promise.reject(err);
+                        this.setState({edgesLoading: false});
+                        return Promise.reject(err);
                 });
             }
 
@@ -1169,7 +1104,7 @@
 
         setTimeout(() => {
             ReactDOM.render(<Console/>, rootElement);
-        }, 500);
+        }, 750);
     </script>
 
 </body>
