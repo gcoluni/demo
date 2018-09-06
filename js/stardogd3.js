@@ -1,7 +1,7 @@
 'use strict';
 
 function StardogD3(_selector, _options) {
-    let container, graph, info, node, nodes, relationship, relationshipOutline, relationshipOverlay, relationshipText,
+    let container, node, nodes, relationship, relationshipOutline, relationshipOverlay, relationshipText,
         relationships, selector, simulation, svg, svgNodes, svgRelationships, svgScale, svgTranslate,
         justLoaded = false,
         numClasses = 0,
@@ -12,7 +12,6 @@ function StardogD3(_selector, _options) {
             infoPanel: true,
             minCollision: undefined,
             stardogData: undefined,
-            // stardogDataUrl: undefined,
             nodeOutlineFillColor: undefined,
             nodeRadius: 25,
             onNodeClick: undefined,
@@ -38,8 +37,6 @@ function StardogD3(_selector, _options) {
     ];
 
     function init(_selector, _options) {
-
-        console.log('init');
 
         if (!Array.prototype.find) {
             Array.prototype.find = function (predicate) {
@@ -81,42 +78,20 @@ function StardogD3(_selector, _options) {
         container.attr('class', 'stardogd3')
             .html('');
 
-        if (options.infoPanel) {
-            info = appendInfoPanel(container);
-        }
-
         appendGraph(container);
 
-        simulation = initSimulation(options.stardogData);
+        simulation = initSimulation();
 
         if (options.stardogData) {
             loadStardogData(options.stardogData);
-            // } else if (options.stardogDataUrl) {
-            //     loadStardogDataFromUrl(options.stardogDataUrl);
         } else {
-            console.error('Error: one of stardogData or stardogDataUrl must be specified!');
+            console.error('Error: stardogData must be specified!');
         }
     }
 
-    function initSimulation(stardogData) {
+    function initSimulation() {
 
-        let simulation;
-
-        // simulation = d3.forceSimulation(nodes)
-        //     .velocityDecay(0.2)
-        //     .force('collide', d3.forceCollide().radius(() => {
-        //         return options.minCollision;
-        //     }))
-        //     .force('charge', d3.forceManyBody().strength(200))
-        //     .force('center', d3.forceCenter(d3.select(_selector).node().offsetWidth / 2, d3.select(_selector).node().offsetHeight / 2))
-        //     .force('link', d3.forceLink(relationships).distance(130).id(function (d) {
-        //         return d.id;
-        //     }))
-        //     .on('tick', function () {
-        //         tick();
-        //     });
-
-        simulation = d3.forceSimulation(nodes)
+        let simulation = d3.forceSimulation(nodes)
             .force('collide', d3.forceCollide().radius(function(d) {
                 return options.minCollision;
             }))
@@ -245,8 +220,6 @@ function StardogD3(_selector, _options) {
 
     function tickRelationshipsOverlays() {
 
-        // console.log('relationshipOverlay: ', relationshipOverlay);
-
         relationshipOverlay.attr('d', function (d) {
 
             // Determines if curved edges should always be used
@@ -254,7 +227,7 @@ function StardogD3(_selector, _options) {
 
             // If only showRelationshipCurvedEdges is set, we will check to see if there are multiple
             // edges in order to draw a curved or straight edge.
-            if (!opposingRelationship && options.showRelationshipCurvedEdges) {
+            if (options.showRelationshipCurvedEdges) {
                 opposingRelationship = relationships.find(r =>
                     r.source.id === d.target.id &&
                     r.target.id === d.source.id);
@@ -262,15 +235,15 @@ function StardogD3(_selector, _options) {
 
             if (opposingRelationship) {
 
-                    let offset = 30;
+                let offset = 30;
 
-                    let dx = (d.target.x - d.source.x);
-                    let dy = (d.target.y - d.source.y);
+                let dx = (d.target.x - d.source.x);
+                let dy = (d.target.y - d.source.y);
 
-                    let normalise = Math.sqrt((dx * dx) + (dy * dy));
+                let normalise = Math.sqrt((dx * dx) + (dy * dy));
 
-                    return "M" + (options.nodeRadius - 1) +
-                        ",0S" + ((normalise / 2) * .96)  + "," + offset + " " + (normalise - (options.nodeRadius - 1)) + ",0";
+                return "M" + (options.nodeRadius - 1) +
+                    ",0S" + ((normalise / 2) * .96)  + "," + offset + " " + (normalise - (options.nodeRadius - 1)) + ",0";
             } else {
 
                 let center = {x: 0, y: 0},
@@ -304,12 +277,8 @@ function StardogD3(_selector, _options) {
             let rel = d3.select(this),
                 text = rel.select('.text');
 
-            // Determines if curved edges should always be used
-            let opposingRelationship = options.showRelationshipCurvedEdges && options.alwaysShowCurvedEdges;
-
-            // If only showRelationshipCurvedEdges is set, we will check to see if there are multiple
-            // edges in order to draw a curved or straight edge.
-            if (!opposingRelationship && options.showRelationshipCurvedEdges) {
+            let opposingRelationship;
+            if (options.showRelationshipCurvedEdges) {
                 opposingRelationship = relationships.find(r =>
                     r.source.id === relationship.target.id &&
                     r.target.id === relationship.source.id
@@ -337,7 +306,7 @@ function StardogD3(_selector, _options) {
                         translateY += (10 - rotateAngle) / 2;
                     }
 
-                    return 'translate(' + ((normalise + (options.nodeRadius)) / 3) + ', ' + translateY + ') rotate(' + rotateAngle + ')';
+                    return 'translate(' + ((normalise + (options.nodeRadius)) / 2) + ', ' + translateY + ') rotate(' + rotateAngle + ')';
                 });
             } else {
 
@@ -371,7 +340,6 @@ function StardogD3(_selector, _options) {
 
     function appendGraph(container) {
 
-        console.log('appendGraph');
 
         svg = container.append('svg')
             .attr('width', '100%')
@@ -394,23 +362,6 @@ function StardogD3(_selector, _options) {
             }))
             .on('dblclick.zoom', null)
             .append('g');
-
-        // svg.append("svg:defs").selectAll("marker")
-        //     .data(["end"])      // Different link/path types can be defined here
-        //     .enter().append("svg:marker")    // This section adds in the arrows
-        //     .attr("id", String)
-        //     .attr("viewBox", "0 -5 10 10")
-        //     .attr("refX", 15)
-        //     .attr("refY", -1.5)
-        //     .attr("markerWidth", 6)
-        //     .attr("markerHeight", 6)
-        //     .attr("orient", "auto")
-        //     .append("svg:path")
-        //     .attr("d", "M0,-5L10,0L0,5");
-
-        // svgRelationships = svg.append('g')
-        //     .attr('class', 'relationships')
-        //     .attr("marker-end", "url(#end)");
 
         if (options.relationshipIcon && endCaps.find(e => e.name === options.relationshipIcon)) {
 
@@ -448,75 +399,22 @@ function StardogD3(_selector, _options) {
     }
 
     function appendNode() {
-        console.log('appendNode');
         return node.enter()
             .append('g')
             .attr('class', function (d) {
-                let highlight, i,
-                    classes = 'node',
-                    label = d.label[0];
-
-                // if (icon(d)) {
-                //     classes += ' node-icon';
-                // }
-                //
-                // if (image(d)) {
-                //     classes += ' node-image';
-                // }
-
-                if (options.highlight) {
-                    for (i = 0; i < options.highlight.length; i++) {
-                        highlight = options.highlight[i];
-
-                        if (d.label === highlight.class && d.properties[highlight.property] === highlight.value) {
-                            classes += ' node-highlighted';
-                            break;
-                        }
-                    }
-                }
-
-                return classes;
+                return 'node';
             })
             .on('click', function (d) {
-                d.fx = d.fy = null;
-
-                if (typeof options.onNodeClick === 'function') {
-
-                    options.onNodeClick(d, addRemoveStardogData);
-
-                    if (options.zoomFit) {
-                        zoomFit(2);
-                    }
-                }
 
             })
             .on('dblclick', function (d) {
                 stickNode(d);
 
-                if (typeof options.onNodeDoubleClick === 'function') {
-                    options.onNodeDoubleClick(d);
-                }
             })
             .on('mouseenter', function (d) {
-                // if (info) {
-                //     updateInfo(d);
-                // }
-                //
-                // if (typeof options.onNodeMouseEnter === 'function') {
-                //     options.onNodeMouseEnter(d);
-                // }
-
                 d3.select(this).select('.ring').attr('class', 'ringOn');
             })
             .on('mouseleave', function (d) {
-                // if (info) {
-                //     clearInfo(d);
-                // }
-                //
-                // if (typeof options.onNodeMouseLeave === 'function') {
-                //     options.onNodeMouseLeave(d);
-                // }
-
                 d3.select(this).select('.ringOn').attr('class', 'ring');
             })
             .call(d3.drag()
@@ -526,27 +424,16 @@ function StardogD3(_selector, _options) {
     }
 
     function appendNodeToGraph() {
-
-        console.log('appendNodeToGraph');
-
         let n = appendNode();
 
         appendRingToNode(n);
         appendOutlineToNode(n);
-
-        // if (options.icons) {
         appendTextToNode(n);
-        // }
-
-        // if (options.images) {
-        //     appendImageToNode(n);
-        // }
 
         return n;
     }
 
     function appendOutlineToNode(node) {
-        console.log('appendOutlineToNode');
         return node.append('circle')
             .attr('class', 'outline')
             .attr('r', options.nodeRadius)
@@ -563,7 +450,6 @@ function StardogD3(_selector, _options) {
     }
 
     function appendRingToNode(node) {
-        console.log('appendRingToNode');
         return node.append('circle')
             .attr('class', 'ring')
             .attr('r', options.nodeRadius * 1.2)
@@ -574,11 +460,6 @@ function StardogD3(_selector, _options) {
 
     function appendTextToNode(node) {
 
-        console.log('appendTextToNode');
-
-
-        // if ((navigator.userAgent.indexOf("MSIE") != -1) || (!!document.documentMode == true)) //IF IE > 10
-        // {
         return node.append('text')
             .attr('class', 'text')
             .attr('fill', '#000000')
@@ -586,62 +467,21 @@ function StardogD3(_selector, _options) {
             .attr('pointer-events', 'none')
             .attr('text-anchor', 'middle')
             .attr('y', '4px')
-            // .attr('y', function (d) {
-            //     return icon(d) ? (parseInt(Math.round(options.nodeRadius * 0.32)) + 'px') : '4px';
-            // })
             .text((d) => {
                 return d.label;
             });
-        // } else {
-        //     return node.append('foreignObject')
-        //         .attr('class', function (d) {
-        //             return 'text' + (icon(d) ? ' icon' : '');
-        //         })
-        //         .attr('fill', '#000000')
-        //         .attr('font-size', function (d) {
-        //             return icon(d) ? (options.nodeRadius + 'px') : '10px';
-        //         })
-        //         .attr('pointer-events', 'none')
-        //         // .attr('y', function(d) {
-        //         //     return icon(d) ? (parseInt(Math.round(options.nodeRadius * 0.32)) + 'px') : '4px';
-        //         // })
-        //         .attr("width", 120)
-        //         .attr("height", 50)
-        //         .attr('style', 'text-align: center')
-        //         .attr('x', '-60')
-        //         .attr('y', '-25')
-        //         // .append('body')
-        //         // .attr('xmlns', 'http://www.w3.org/1999/xhtml')
-        //         .append("xhtml:div")
-        //         .attr('style', 'display: table; height: 50px; width:120px')
-        //         .append("xhtml:p")
-        //         .attr('style', 'display: table-cell; text-align: center; vertical-align: middle;')
-        //         .text(function (d) {
-        //             let _icon = icon(d);
-        //             return _icon ? '&#x' + _icon : d.title;
-        //         });
-        // }
     }
 
     function appendRelationship() {
-        console.log('appendRelationship');
         return relationship.enter()
             .append('g')
             .attr('class', 'relationship')
             .on('dblclick', function (d) {
-                // if (typeof options.onRelationshipDoubleClick === 'function') {
-                //     options.onRelationshipDoubleClick(d);
-                // }
+
             })
             .on('mouseenter', function (d) {
-                // if (info) {
-
-                // Determines if curved edges should always be used
-                let opposingRelationship = options.showRelationshipCurvedEdges && options.alwaysShowCurvedEdges;
-
-                // If only showRelationshipCurvedEdges is set, we will check to see if there are multiple
-                // edges in order to draw a curved or straight edge.
-                if (!opposingRelationship && options.showRelationshipCurvedEdges) {
+                let opposingRelationship;
+                if (options.showRelationshipCurvedEdges) {
                     opposingRelationship = relationships.find(r =>
                         r.source.id === d.target.id &&
                         r.target.id === d.source.id);
@@ -652,18 +492,10 @@ function StardogD3(_selector, _options) {
                 } else {
                     d3.select(this).select('.overlay').attr('class', 'overlayOn');
                 }
-
-                // }
             })
             .on('mouseleave', function (d) {
-                // if (info) {
-
-                // Determines if curved edges should always be used
-                let opposingRelationship = options.showRelationshipCurvedEdges && options.alwaysShowCurvedEdges;
-
-                // If only showRelationshipCurvedEdges is set, we will check to see if there are multiple
-                // edges in order to draw a curved or straight edge.
-                if (!opposingRelationship && options.showRelationshipCurvedEdges) {
+                let opposingRelationship;
+                if (options.showRelationshipCurvedEdges) {
                     opposingRelationship = relationships.find(r =>
                         r.source.id === d.target.id &&
                         r.target.id === d.source.id);
@@ -674,17 +506,12 @@ function StardogD3(_selector, _options) {
                 } else {
                     d3.select(this).select('.overlayOn').attr('class', 'overlay');
                 }
-
-
-
-                // }
             })
     }
 
     function appendOutlineToRelationship(r) {
         return r.append('path')
             .attr('class', 'outline')
-            // .attr('fill', '#a5abb6')
             .attr('fill', 'none')
             .attr("stroke", options.relationshipColor)
             .attr("stroke-width","1px")
@@ -745,81 +572,14 @@ function StardogD3(_selector, _options) {
 
         d.fx = d.x;
         d.fy = d.y;
-
-        if (typeof options.onNodeDragStart === 'function') {
-            options.onNodeDragStart(d);
-        }
     }
 
-
-
-
-
-
-
-    // function loadStardogDataFromUrl(stardogDataUrl) {
-    //     nodes = [];
-    //     relationships = [];
-    //
-    //     d3.json(stardogDataUrl, function (error, data) {
-    //         if (error) {
-    //             throw error;
-    //         }
-    //
-    //         updateWithStardogData(data);
-    //     });
-    // }
 
     function merge(target, source) {
         Object.keys(source).forEach(function (property) {
             target[property] = source[property];
         });
     }
-
-    // function findNode(nodes, id) {
-    //     // console.log("stardogd3: nodes: `" + JSON.stringify(nodes) + "', length: " + nodes.length);
-    //     for (let i = 0; i < nodes.length; i++) {
-    //         if (nodes[i].id === id) {
-    //             return nodes[i];
-    //         }
-    //     }
-    //     return null;
-    // }
-
-    // function stardogDataToD3Data(data) {
-    //     let graph = {
-    //         nodes: [],
-    //         relationships: []
-    //     };
-    //
-    //     console.log("stardogd3: stardogDataToD3Data: data: ", data);
-    //
-    //     graph.nodes = data.nodes;
-    //     graph.relationships = data.relationships;
-    //
-    //     console.log("stardogd3: graph1: ", graph);
-    //
-    //
-    //     if (graph.relationships) {
-    //
-    //         graph.relationships.sort(function (a, b) {
-    //             return (a.source > b.source ? 1 : (a.source < b.source ? -1 :
-    //                 (a.target > b.target ? 1 : (a.target < b.target ? -1 : 0))));
-    //         });
-    //
-    //         for (let i = 0; i < graph.relationships.length; i++) {
-    //             if (i !== 0 && graph.relationships[i].source === graph.relationships[i - 1].source && graph.relationships[i].target === graph.relationships[i - 1].target) {
-    //                 graph.relationships[i].linknum = graph.relationships[i - 1].linknum + 1;
-    //             } else {
-    //                 graph.relationships[i].linknum = 1;
-    //             }
-    //         }
-    //     }
-    //
-    //     console.log("stardogd3: graph2: ", graph);
-    //     return graph;
-    // }
-
 
     function rotate(cx, cy, x, y, angle) {
         let radians = (Math.PI / 180) * angle,
@@ -845,31 +605,6 @@ function StardogD3(_selector, _options) {
             relationships: relationships.length
         };
     }
-
-    /*
-        function smoothTransform(elem, translate, scale) {
-            let animationMilliseconds = 5000,
-                timeoutMilliseconds = 50,
-                steps = parseInt(animationMilliseconds / timeoutMilliseconds);
-
-            setTimeout(function() {
-                smoothTransformStep(elem, translate, scale, timeoutMilliseconds, 1, steps);
-            }, timeoutMilliseconds);
-        }
-
-        function smoothTransformStep(elem, translate, scale, timeoutMilliseconds, step, steps) {
-            let progress = step / steps;
-
-            elem.attr('transform', 'translate(' + (translate[0] * progress) + ', ' + (translate[1] * progress) + ') scale(' + (scale * progress) + ')');
-
-            if (step < steps) {
-                setTimeout(function() {
-                    smoothTransformStep(elem, translate, scale, timeoutMilliseconds, step + 1, steps);
-                }, timeoutMilliseconds);
-            }
-        }
-    */
-
 
     function toString(d) {
         let s = d.label ? d.label : d.type ? d.type : 'NA';
@@ -902,63 +637,28 @@ function StardogD3(_selector, _options) {
     }
 
     function updateWithD3Data(d3Data) {
-        console.log('updateWithD3Data');
         updateNodesAndRelationships(d3Data.nodes, d3Data.relationships);
     }
 
-    function addRemoveStardogData(action, stardogData) {
-        console.log('addRemoveStardogData');
-        // let d3Data = stardogDataToD3Data(stardogData);
-        if (action === "add") {
-            updateWithD3Data("add", stardogData);
-        } else {
-
-            updateWithD3Data("remove", stardogData);
-        }
-    }
-
     function updateWithStardogData(stardogData) {
-        console.log('updateWithStardogData');
-        // let d3Data = stardogDataToD3Data(stardogData);
-
         updateWithD3Data(stardogData);
-    }
-
-    function updateInfo(d) {
-        clearInfo();
-
-        if (d.labels) {
-            appendInfoElementClass('class', d.label);
-        } else {
-            appendInfoElementRelationship('class', d.type);
-        }
-
-        appendInfoElementProperty('property', '&lt;id&gt;', d.id);
-
-        Object.keys(d.properties).forEach(function (property) {
-            appendInfoElementProperty('property', property, JSON.stringify(d.properties[property]));
-        });
     }
 
     function updateNodes(n) {
 
 
-        console.log('updateNodes');
-
         nodes = n;
 
-        svgNodes.selectAll('.node').remove();
 
         node = svgNodes.selectAll('.node')
             .data(nodes, (d) => {
-                // console.log(d.id)
                 return d.id;
             });
 
         let nodeEnter = appendNodeToGraph();
         node = nodeEnter.merge(node);
 
-        // Removes the nodes
+        // // Removes the nodes
         // svgNodes.selectAll('.node')
         //     .data(nodes, (d) => {
         //         return d.id;
@@ -967,41 +667,17 @@ function StardogD3(_selector, _options) {
 
     function updateNodesAndRelationships(n, r) {
 
-        console.log('updateNodesAndRelationships');
-
-        // if (action === 'add') {
-        //     updateRelationships(action, r);
-        //     updateNodes(action, n);
-        // } else {
-        //     updateRelationships(action, n);
-        //     updateNodes(action, n);
-        // }
-
         updateNodes(n);
         updateRelationships(r);
 
-        // console.log('updateNodesAndRelationships', nodes, relationships);
-
         simulation.nodes(nodes);
         simulation.force('link').links(relationships);
-        simulation.alpha(1).restart();
+        simulation.alpha(0.3).restart();
     }
 
     function updateRelationships(r) {
 
-        console.log('updateRelationships');
-
-
-        // Array.prototype.push.apply(relationships, r);
-        //
-        // console.log('relationships - 1', relationships);
-
         relationships = r;
-
-        // console.log('relationships - 2', relationships);
-
-        svgRelationships.selectAll('.relationship').remove();
-
         relationship = svgRelationships.selectAll('.relationship')
             .data(r, (d) => {
                 return d.id;
@@ -1011,26 +687,27 @@ function StardogD3(_selector, _options) {
 
         relationship = relationshipEnter.relationship.merge(relationship);
 
+        relationshipText = svg.selectAll('.relationship .text');
+        relationshipText = relationshipEnter.text.merge(relationshipText);
+
         relationshipOutline = svg.selectAll('.relationship .outline');
         relationshipOutline = relationshipEnter.outline.merge(relationshipOutline);
 
         relationshipOverlay = svg.selectAll('.relationship .overlay');
         relationshipOverlay = relationshipEnter.overlay.merge(relationshipOverlay);
 
-        relationshipText = svg.selectAll('.relationship .text');
-        relationshipText = relationshipEnter.text.merge(relationshipText);
 
-        // svgRelationships.selectAll('.relationship')
-        //     .data(relationships, function (d) {
-        //         return d.id;
-        //     }).exit().remove();
+        svgRelationships.selectAll('.relationship')
+            .data(relationships, function (d) {
+                return d.id;
+            }).exit().remove();
     }
 
     function version() {
         return VERSION;
     }
 
-    function zoomFit(transitionDuration) {
+    function zoomFit() {
         let bounds = svg.node().getBBox(),
             parent = svg.node().parentElement.parentElement,
             fullWidth = parent.clientWidth,
@@ -1048,14 +725,12 @@ function StardogD3(_selector, _options) {
         svgTranslate = [fullWidth / 2 - svgScale * midX, fullHeight / 2 - svgScale * midY];
 
         svg.attr('transform', 'translate(' + svgTranslate[0] + ', ' + svgTranslate[1] + ') scale(' + svgScale + ')');
-//        smoothTransform(svgTranslate, svgScale);
     }
 
     init(_selector, _options);
 
     return {
 
-        // stardogDataToD3Data: stardogDataToD3Data,
         size: size,
         updateWithD3Data: updateWithD3Data,
         updateWithStardogData: updateWithStardogData,
@@ -1093,10 +768,6 @@ function StardogD3(_selector, _options) {
 
     function class2darkenColor(cls) {
         return d3.rgb(class2color(cls)).darker(1);
-    }
-
-    function clearInfo() {
-        info.html('');
     }
 
     function class2color(cls) {

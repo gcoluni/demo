@@ -3,16 +3,13 @@
 <head>
     <title>Stardog Demo</title>
     <meta charset="utf-8"/>
-    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
-    <script crossorigin src="https://unpkg.com/prop-types@15.6.2/prop-types.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.21.1/babel.min.js"></script>
+    <script crossorigin src="js/react.min.js"></script>
+    <script crossorigin src="js/react-dom.production.min.js"></script>
+    <script crossorigin src="js/prop-types.js"></script>
+    <script src="js/babel.min.js"></script>
     <script src="js/stardog.min.js"></script>
     <script src="js/lodash.js"></script>
-
-
     <script src="js/d3.v5.js"></script>
-    <script src="js/d3Test.js"></script>
     <script src="js/stardogd3.js"></script>
 
     <script>
@@ -369,7 +366,6 @@
             };
 
             updateGenderState = (ev) => {
-                console.log("TESTING", ev.target.id);
                 this.setState({gender: ev.target.id});
             };
 
@@ -461,9 +457,6 @@
             }
 
             getRelationships() {
-
-                console.log('getRelationships');
-
                 stardogjs.query.graphql.execute(graphQLConn, 'stardogDemo',
                     'query ' +
                     '   withAliases @config(alias: {person: "http://api.stardog.com/Person"}) {' +
@@ -523,7 +516,10 @@
                       showError: false
                   });
 
-                  this.props.addRelationship({fromPerson: this.state.fromPerson, toPerson: this.state.toPerson, relationship: this.state.relationship})
+                  this.props.addRelationship({
+                      fromPerson: this.state.fromPerson,
+                      toPerson: this.state.toPerson,
+                      relationship: this.state.relationship})
               }
 
             };
@@ -644,9 +640,6 @@
                                 alwaysShowCurvedEdges: true,
                             });
                         } else {
-
-                            console.log('demo - edges', this.edges);
-
                             stardogd3.updateWithStardogData({
                                 nodes: this.nodes,
                                 relationships: this.edges
@@ -657,9 +650,6 @@
             }
 
             componentDidMount() {
-
-                console.log('componentDidMount');
-
                 this.setState({
                     edgesLoading: true,
                     nodesLoading: true
@@ -669,9 +659,6 @@
             }
 
             performQuery() {
-
-                console.log('performQuery');
-
                 stardogjs.query.graphql.execute(graphQLConn, 'stardogDemo',
                     'query \n' +
                     '   withAliases @config(alias: {person: "http://api.stardog.com/Person"}) {\n' +
@@ -737,34 +724,6 @@
                 });
             }
 
-            /*
-            if (!stardogd3) {
-
-                        vizData = {
-                            nodes: nodes,
-                            relationships: edges
-                        };
-
-                        stardogd3 = new StardogD3('#stardogd3', {
-                            // minCollision: 120,
-                            stardogData: vizData,
-                            infoPanel: false,
-                            nodeRadius: 25,
-                            relationshipColor: "blue",
-                            relationshipOpacity: .1,
-                            showRelationshipTitles: true,
-                            relationshipIcon: 'arrow',
-                            // showRelationshipCurvedEdges: true,
-                            // alwaysShowCurvedEdges: true,
-                        });
-                    } else {
-                        stardogd3.updateWithStardogData({
-                            nodes: nodes,
-                            relationships: edges
-                        })
-                    }
-             */
-
             shouldComponentUpdate(nextProps, nextState) {
                 return !!nextProps.shouldUpdate
                     || !_.isEqual(this.state, nextState);
@@ -796,15 +755,6 @@
             }
 
             state = {queryResult: '', response: null, clearForm: false, updateReasoning: false, reasoning: false, updateRelationships: false};
-
-            // runQuery = (queryStr) => {
-            //     stardogjs.query.execute(standConn, 'stardogDemo', queryStr, 'application/sparql-results+json', {
-            //         limit: 10,
-            //         offset: 0,
-            //     }).then(({body}) => {
-            //         this.setState({queryResult: body.results.bindings})
-            //     });
-            // };
 
             addPerson = (person) => {
                 let queryStr = `insert data { <http://stardog.com/${person.firstName}_${person.lastName}> stardog:firstName '${person.firstName}' ;
@@ -838,9 +788,6 @@
             };
 
             updateReasoning = (value) => {
-
-                console.log('updateReasoning value:', value);
-
                 this.setState({updateReasoning: true, reasoning: value});
             };
 
@@ -866,9 +813,6 @@
             }
 
             render() {
-
-                console.log('REASONING: ', this.state.reasoning);
-
                 let content = (
                     <div className="inputBorder">
                         <div style={{width: '70%', display: 'inline-block', height: '810px'}}>
@@ -895,7 +839,6 @@
         class Reasoning extends React.Component {
 
             onChange = (event) => {
-                console.log('updateReasoning value:', event.target.checked);
                 this.props.updateReasoning(event.target.checked);
             };
 
@@ -951,10 +894,6 @@
             }
 
             state = {tabIndex: 0, showModal: false};
-
-            updateTabIndex(value) {
-                this.setState({tabIndex: value})
-            };
 
             showModal = () => {
                 this.setState({ showModal: true });

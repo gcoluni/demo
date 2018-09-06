@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'js/react.min';
 import { PropTypes } from 'prop-types';
 
 class Console2 extends React.Component {
