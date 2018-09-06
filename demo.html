@@ -3,9 +3,9 @@
 <head>
     <title>Stardog Demo</title>
     <meta charset="utf-8"/>
-    <script crossorigin src="js/react.min.js"></script>
-    <script crossorigin src="js/react-dom.production.min.js"></script>
-    <script crossorigin src="js/prop-types.js"></script>
+    <script src="js/react.min.js"></script>
+    <script src="js/react-dom.production.min.js"></script>
+    <script src="js/prop-types.js"></script>
     <script src="js/babel.min.js"></script>
     <script src="js/stardog.min.js"></script>
     <script src="js/lodash.js"></script>
@@ -611,22 +611,21 @@
             componentDidUpdate() {
 
                 if (this.props.shouldUpdate) {
-                    this.performQuery();
-
                     this.setState({
                         edgesLoading: true,
                         nodesLoading: true
                     });
+
+                    this.performQuery();
                 } else {
                     if (!this.state.edgesLoading && !this.state.nodesLoading) {
 
+                        vizData = {
+                            nodes: this.nodes,
+                            relationships: this.edges
+                        };
+
                         if (!stardogd3) {
-
-                            vizData = {
-                                nodes: this.nodes,
-                                relationships: this.edges
-                            };
-
                             stardogd3 = new StardogD3('#stardogd3', {
                                 minCollision: 60,
                                 stardogData: vizData,
@@ -640,10 +639,7 @@
                                 alwaysShowCurvedEdges: true,
                             });
                         } else {
-                            stardogd3.updateWithStardogData({
-                                nodes: this.nodes,
-                                relationships: this.edges
-                            })
+                            stardogd3.updateWithStardogData(vizData)
                         }
                     }
                 }
@@ -659,8 +655,8 @@
             }
 
             performQuery() {
-                stardogjs.query.graphql.execute(graphQLConn, 'stardogDemo',
-                    'query \n' +
+
+                let nodeQueryStr = 'query \n' +
                     '   withAliases @config(alias: {person: "http://api.stardog.com/Person"}) {\n' +
                     '       person {\n' +
                     '           firstName: stardog_firstName,\n' +
@@ -669,7 +665,9 @@
                     '           id @bind(to : "CONCAT($firstName, \'_\', $lastName)")\n' +
                     '           label @bind(to : "CONCAT($firstName, \' \', $lastName)")\n' +
                     '       }\n' +
-                    '   }',
+                    '   }';
+
+                stardogjs.query.graphql.execute(graphQLConn, 'stardogDemo', nodeQueryStr,
                     {
                         "@reasoning": false
                     }
@@ -685,7 +683,7 @@
                     return Promise.reject(err);
                 });
 
-                let queryStr = 'select ?source ?target ?linkType where { \n' +
+                let edgeQueryStr = 'select ?source ?target ?linkType where { \n' +
                     '    ?linkType rdfs:subPropertyOf :linkType . \n' +
                     '    ?s ?linkType ?t .\n' +
                     '    ?s stardog:firstName ?sfn .\n' +
@@ -697,30 +695,33 @@
                     '    FILTER (?linkType != :linkType) \n' +
                     '}';
 
-                stardogjs.query.execute(standConn, 'stardogDemo', queryStr, 'application/sparql-results+json', {reasoning: this.props.useReasoning})
-                    .then(({body}) => {
-                        if (body && body.results && body.results.bindings && body.results.bindings.length > 0) {
+                stardogjs.query.execute(standConn, 'stardogDemo', edgeQueryStr, 'application/sparql-results+json',
+                    {
+                        reasoning: this.props.useReasoning
+                    }
+                ).then(({body}) => {
+                    if (body && body.results && body.results.bindings && body.results.bindings.length > 0) {
 
-                            this.edges = [];
+                        this.edges = [];
 
-                            if (!_.isEmpty(body.results.bindings)) {
-                                body.results.bindings.forEach(e => {
-                                    this.edges.push({
-                                        source: e.source.value,
-                                        target: e.target.value,
-                                        linkType: e.linkType.value.substring(e.linkType.value.lastIndexOf('/') + 1, e.linkType.value.length),
-                                        id: `${e.source.value}_${e.linkType.value}_${e.target.value}`
+                        if (!_.isEmpty(body.results.bindings)) {
+                            body.results.bindings.forEach(e => {
+                                this.edges.push({
+                                    source: e.source.value,
+                                    target: e.target.value,
+                                    linkType: e.linkType.value.substring(e.linkType.value.lastIndexOf('/') + 1, e.linkType.value.length),
+                                    id: `${e.source.value}_${e.linkType.value}_${e.target.value}`
 
-                                    });
                                 });
-                            }
+                            });
                         }
+                    }
 
-                        this.setState({edgesLoading: false});
+                    this.setState({edgesLoading: false});
 
-                    }).catch((err) => {
-                        this.setState({edgesLoading: false});
-                        return Promise.reject(err);
+                }).catch((err) => {
+                    this.setState({edgesLoading: false});
+                    return Promise.reject(err);
                 });
             }
 
